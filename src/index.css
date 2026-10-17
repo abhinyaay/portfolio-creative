@@ -1,0 +1,1321 @@
+/* ═══════════════════════════════════════════════════════════
+   Tokens
+   ═══════════════════════════════════════════════════════════ */
+:root {
+  --bg: #000000;
+  --bg-2: #07070a;
+  --bg-3: #0d0d11;
+  --line: rgba(236, 231, 225, 0.09);
+  --line-strong: rgba(236, 231, 225, 0.2);
+
+  --text: #ece7e1;
+  --text-dim: #9a938a;
+  --muted: #8d857a;
+  --muted-2: #5c564e;
+
+  --accent: #ff9d2e;
+  --accent-soft: #ffc46b;
+  --accent-deep: #b45309;
+
+  /* liquid glass */
+  --glass-bg: rgba(255, 255, 255, 0.055);
+  --glass-brd: rgba(255, 255, 255, 0.14);
+  --glass-blur: 18px;
+
+  --sans: "Geist", system-ui, -apple-system, sans-serif;
+  --mono: "Geist Mono", ui-monospace, "SF Mono", monospace;
+
+  --pad: clamp(1.25rem, 5vw, 5rem);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+body.is-locked {
+  overflow: hidden;
+}
+
+h1,
+h2,
+h3,
+h4,
+p {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+::selection {
+  background: var(--accent);
+  color: #000;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Shared bits
+   ═══════════════════════════════════════════════════════════ */
+.shell {
+  width: 100%;
+  max-width: 1560px;
+  margin-inline: auto;
+  padding-inline: var(--pad);
+}
+
+.section {
+  position: relative;
+  padding-block: clamp(6rem, 14vh, 12rem);
+}
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.eyebrow::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, var(--line-strong), transparent);
+}
+
+.section-title {
+  font-size: clamp(2.4rem, 6.5vw, 5.5rem);
+  font-weight: 500;
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+  margin-block: 1.75rem 0;
+}
+
+.section-title em {
+  font-style: normal;
+  color: var(--muted-2);
+}
+
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ambient amber orbs behind everything */
+.orb {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(90px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.orb--a {
+  top: -14vh;
+  left: -10vw;
+  width: 42vw;
+  height: 42vw;
+  background: radial-gradient(circle, rgba(255, 157, 46, 0.16), transparent 68%);
+}
+
+.orb--b {
+  bottom: -18vh;
+  right: -14vw;
+  width: 48vw;
+  height: 48vw;
+  background: radial-gradient(circle, rgba(180, 83, 9, 0.2), transparent 68%);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Liquid glass
+   Two tiers on purpose: `.glass` does the real thing with
+   backdrop-filter, `.glass-lite` fakes it with translucency and a rim
+   highlight. Backdrop-filter is GPU-expensive per element, so the real
+   one is reserved for the handful of floating chrome pieces and the
+   lite one carries the dozens of chips and tiles.
+   ═══════════════════════════════════════════════════════════ */
+.glass,
+.glass-lite {
+  position: relative;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-brd);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3),
+    0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.glass {
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%) brightness(1.08);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%) brightness(1.08);
+}
+
+/* specular highlight that tracks the pointer across the surface —
+   the "liquid" part. useGlassSheen sets --mx/--my per element. */
+.glass::after,
+.glass-lite::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    55% 90% at var(--mx, 50%) var(--my, 0%),
+    rgba(255, 255, 255, 0.16),
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.45s var(--ease);
+  pointer-events: none;
+}
+
+.glass:hover::after,
+.glass-lite:hover::after {
+  opacity: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Cursor — a glass lens that deforms with velocity
+   ═══════════════════════════════════════════════════════════ */
+.cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  /* keep in sync with SIZE in Cursor.jsx — the wetting maths reads it */
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  /* a real lens: it saturates and lifts whatever sits beneath it.
+     `mix-blend-mode` is deliberately absent — it cancels backdrop-filter.
+     Blur is kept low (1.5px) so text stays legible THROUGH the lens rather
+     than smearing, and the rim carries the visibility instead — on a pure
+     black background there is nothing for a blur to refract. */
+  background: rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(1.5px) saturate(200%) brightness(1.9);
+  -webkit-backdrop-filter: blur(1.5px) saturate(200%) brightness(1.9);
+  box-shadow:
+    /* bright top rim + dark underside = the glass bead read */
+    inset 0 1.5px 1px rgba(255, 255, 255, 0.75),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.3),
+    inset 0 0 10px rgba(255, 255, 255, 0.25),
+    /* chromatic aberration: the element is rotated to face its direction of
+       travel, so +X is the leading edge. --ca is written per-frame and grows
+       with deformation, splitting the fringes apart as it stretches. */
+    inset var(--ca, 0px) 0 9px rgba(255, 138, 56, 0.5),
+    inset calc(-1 * var(--ca, 0px)) 0 9px rgba(90, 170, 255, 0.45),
+    var(--ca, 0px) 0 12px rgba(255, 138, 56, 0.25),
+    calc(-1 * var(--ca, 0px)) 0 12px rgba(90, 170, 255, 0.22),
+    /* outer halo keeps it findable against flat black */
+    0 0 0 1px rgba(255, 255, 255, 0.12),
+    0 3px 18px rgba(0, 0, 0, 0.5);
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0;
+  will-change: transform;
+}
+
+/* satellite beads flung off the tail at speed */
+.cursor-bead {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 15px;
+  height: 15px;
+  margin: -7.5px 0 0 -7.5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.13);
+  backdrop-filter: blur(1.5px) saturate(190%) brightness(1.75);
+  -webkit-backdrop-filter: blur(1.5px) saturate(190%) brightness(1.75);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.6);
+  pointer-events: none;
+  z-index: 9997;
+}
+
+/* a drop hitting water — spawned on click, removed when it finishes */
+.cursor-ripple {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 46px;
+  height: 46px;
+  margin: -23px 0 0 -23px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 0 14px rgba(255, 157, 46, 0.35);
+  pointer-events: none;
+  z-index: 9998;
+}
+
+/* hide the native pointer only once the custom one is actually running.
+   `cursor: none` still leaves text selectable. */
+body.has-cursor,
+body.has-cursor * {
+  cursor: none;
+}
+
+/* film grain so the flat black is not too flat */
+.grain {
+  position: fixed;
+  inset: -50%;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+main {
+  position: relative;
+  z-index: 2;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Preloader
+   ═══════════════════════════════════════════════════════════ */
+.preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: var(--bg);
+}
+
+.preloader__count {
+  font-family: var(--mono);
+  font-size: clamp(4rem, 16vw, 12rem);
+  font-weight: 200;
+  letter-spacing: -0.05em;
+  line-height: 1;
+  color: var(--text);
+  text-align: center;
+}
+
+.preloader__label {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+  text-align: center;
+  margin-top: 1.25rem;
+}
+
+.preloader__bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: left;
+  background: var(--accent);
+  box-shadow: 0 0 24px var(--accent);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Nav + rails
+   ═══════════════════════════════════════════════════════════ */
+/* a floating glass bar. `mix-blend-mode` is gone on purpose — it and
+   backdrop-filter cannot coexist; the blend wins and the blur never paints. */
+.nav {
+  position: fixed;
+  top: 0.9rem;
+  left: var(--pad);
+  right: var(--pad);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 0.95rem 1.7rem;
+  border-radius: 999px;
+}
+
+.nav__mark {
+  font-family: var(--mono);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+}
+
+.nav__mail {
+  flex: 1;
+  text-align: center;
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  transition: color 0.3s var(--ease);
+}
+
+.nav__mail:hover {
+  color: var(--text);
+}
+
+.nav__links {
+  display: flex;
+  gap: clamp(1.25rem, 4vw, 4rem);
+}
+
+.nav__link {
+  position: relative;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  overflow: hidden;
+  display: block;
+  height: 1em;
+  line-height: 1;
+}
+
+.nav__link span {
+  display: block;
+  transition: transform 0.42s var(--ease);
+}
+
+.nav__link span + span {
+  position: absolute;
+  inset: 0;
+}
+
+.nav__link:hover span {
+  transform: translateY(-100%);
+}
+
+/* the decorative hairline that used to live on .rail::after is gone — that
+   pseudo-element now carries the glass sheen, and the panel replaces it. */
+.rail {
+  position: fixed;
+  left: var(--pad);
+  bottom: clamp(2rem, 8vh, 5rem);
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 1.3rem;
+  align-items: center;
+  padding: 1.1rem 0.85rem;
+  border-radius: 999px;
+}
+
+/* round hit areas: the icons are circular, and the cursor's wetting reads
+   this radius — as bare anchors they measured 0 and squared the droplet off */
+.rail a {
+  display: grid;
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  color: var(--muted-2);
+  transition: color 0.3s var(--ease), transform 0.3s var(--ease);
+}
+
+.rail a:hover {
+  color: var(--accent);
+  transform: translateY(-3px);
+}
+
+.resume-btn {
+  position: fixed;
+  right: var(--pad);
+  bottom: clamp(2rem, 8vh, 5rem);
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.24em;
+  color: var(--muted);
+  padding: 0.8rem 1.35rem;
+  border-radius: 999px;
+  transition: color 0.3s var(--ease);
+}
+
+.resume-btn:hover {
+  color: var(--accent);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Hero
+   ═══════════════════════════════════════════════════════════ */
+.hero {
+  position: relative;
+  height: 100svh;
+  padding: 6rem var(--pad) 0;
+  overflow: hidden;
+}
+
+/* character front and centre; copy overlays either side */
+/* `absolute` inside the hero (which clips with overflow:hidden): he belongs
+   to the hero and scrolls away with it 1:1. `fixed` pinned him to the
+   viewport, so he followed you down and floated over the next section.
+   `padding-left` offsets the centring box to the right, clear of the name. */
+.stage {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding-left: clamp(0rem, 22vw, 26rem);
+  pointer-events: none;
+}
+
+/* The Spline camera has a fixed FOV, so the scene is framed by the canvas
+   ASPECT, not its size — letting width and height float independently made
+   the robot crop and slide sideways at different viewport widths. Pinning a
+   constant 3:4 box keeps him identically framed everywhere. */
+.stage__inner {
+  /* `aspect-ratio` alone loses to the canvas's intrinsic width, so both
+     dimensions are derived from one value instead.
+     Square, not 3:4 — the Spline camera has a fixed FOV, so a portrait canvas
+     crops the scene horizontally and sliced off his hand mid-wave. */
+  --stage-h: min(84svh, 46rem, 94vw);
+  height: var(--stage-h);
+  width: var(--stage-h);
+  will-change: transform;
+}
+
+/* Spline paints its own canvas; it needs a sized box and its own pointer
+   events so the scene's mouse interactions still fire inside the stage. */
+.spline-wrap {
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: auto;
+  /* the badge is painted into the canvas bottom-right, so the canvas is grown
+     past this box and the overflow — badge included — is clipped away. A flat
+     patch over it was visible against the warm orb gradient behind. */
+  overflow: hidden;
+}
+
+.spline-wrap > div {
+  height: calc(100% + 76px) !important;
+}
+
+.spline-wrap canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+.hero__copy {
+  position: absolute;
+  inset: 0;
+  padding: 0 var(--pad);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  pointer-events: none;
+}
+
+.hero__left,
+.hero__right {
+  pointer-events: auto;
+}
+
+.hero__right {
+  text-align: right;
+}
+
+/* initial states — the intro timeline animates these in */
+.hero__hello,
+.hero__roles {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.hero__scroll,
+.stage__inner {
+  opacity: 0;
+}
+
+.hero__hello {
+  font-family: var(--mono);
+  font-size: clamp(0.8rem, 1.4vw, 1rem);
+  font-weight: 400;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.hero__name {
+  font-size: clamp(2.6rem, 7.5vw, 7.5rem);
+  font-weight: 500;
+  line-height: 0.86;
+  letter-spacing: -0.05em;
+  margin-block: 0.6rem 0;
+}
+
+.hero__name span {
+  display: block;
+  overflow: hidden;
+}
+
+.hero__name b {
+  display: block;
+  font-weight: inherit;
+}
+
+.hero__name .is-outline b {
+  color: transparent;
+  -webkit-text-stroke: 1.4px var(--muted-2);
+}
+
+.hero__roles {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: clamp(1.5rem, 4vh, 3rem);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.hero__an {
+  color: var(--muted-2);
+}
+
+.hero__rotator {
+  position: relative;
+  height: 1.5em;
+  min-width: 24ch;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+.hero__rotator li {
+  position: absolute;
+  inset: 0;
+  list-style: none;
+  color: var(--accent);
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+.hero__scroll {
+  position: absolute;
+  left: 50%;
+  bottom: 2.5rem;
+  transform: translateX(-50%);
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.hero__scroll i {
+  display: block;
+  width: 1px;
+  height: 3rem;
+  background: linear-gradient(180deg, var(--accent), transparent);
+}
+
+.avatar {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   What I do
+   ═══════════════════════════════════════════════════════════ */
+.disciplines {
+  display: grid;
+  gap: 1px;
+  background: var(--line);
+  border-block: 1px solid var(--line);
+  margin-top: clamp(3rem, 8vh, 6rem);
+}
+
+.disc {
+  background: var(--bg);
+  padding: clamp(2rem, 4vw, 3.5rem);
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: clamp(1.5rem, 4vw, 4rem);
+  transition: background 0.5s var(--ease);
+}
+
+.disc:hover {
+  background: var(--bg-2);
+}
+
+.disc__label {
+  font-size: clamp(1.5rem, 3.4vw, 2.6rem);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.disc__headline {
+  font-size: clamp(1rem, 1.5vw, 1.2rem);
+  font-weight: 400;
+  color: var(--accent-soft);
+  margin-top: 0.9rem;
+  max-width: 22ch;
+}
+
+.disc__body {
+  font-size: clamp(0.92rem, 1.15vw, 1.02rem);
+  line-height: 1.7;
+  color: var(--muted);
+  max-width: 52ch;
+}
+
+.disc__skills {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.disc__skills span {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  transition: border-color 0.3s var(--ease), color 0.3s var(--ease);
+}
+
+.disc:hover .disc__skills span {
+  border-color: rgba(255, 157, 46, 0.28);
+  color: var(--text);
+}
+
+.disc__skills-label {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+  margin-top: 2rem;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Timeline
+   ═══════════════════════════════════════════════════════════ */
+.tl {
+  margin-top: clamp(3rem, 8vh, 6rem);
+  position: relative;
+}
+
+.tl__line {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--line);
+}
+
+.tl__progress {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--accent);
+  box-shadow: 0 0 12px var(--accent);
+  transform: scaleY(0);
+  transform-origin: top;
+}
+
+.tl__row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 6rem minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: clamp(1rem, 3vw, 3rem);
+  padding: clamp(1.75rem, 3.5vh, 3rem) 0 clamp(1.75rem, 3.5vh, 3rem) clamp(1.5rem, 4vw, 3.5rem);
+  border-bottom: 1px solid var(--line);
+}
+
+.tl__row::before {
+  content: "";
+  position: absolute;
+  left: -3px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--muted-2);
+  transition: background 0.4s var(--ease), box-shadow 0.4s var(--ease);
+}
+
+.tl__row.is-on::before {
+  background: var(--accent);
+  box-shadow: 0 0 14px var(--accent);
+}
+
+.tl__year {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  color: var(--muted-2);
+  padding-top: 0.35rem;
+  transition: color 0.4s var(--ease);
+}
+
+.tl__row.is-on .tl__year {
+  color: var(--accent);
+}
+
+.tl__title {
+  font-size: clamp(1.1rem, 1.9vw, 1.5rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.tl__org {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  color: var(--muted-2);
+  margin-top: 0.5rem;
+}
+
+.tl__body {
+  font-size: 0.95rem;
+  line-height: 1.75;
+  color: var(--muted);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Education
+   ═══════════════════════════════════════════════════════════ */
+.edu {
+  margin-top: clamp(3rem, 8vh, 5rem);
+}
+
+.edu__eyebrow {
+  margin-bottom: 1.75rem;
+}
+
+.edu__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  gap: 1rem;
+}
+
+.edu__card {
+  padding: clamp(1.5rem, 3vw, 2.25rem);
+  border-radius: 20px;
+}
+
+.edu__year {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.24em;
+  color: var(--accent);
+  margin-bottom: 1rem;
+}
+
+.edu__school {
+  font-size: clamp(1.05rem, 1.7vw, 1.35rem);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+}
+
+.edu__course {
+  font-size: 0.95rem;
+  color: var(--accent-soft);
+  margin-top: 0.6rem;
+}
+
+.edu__place {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  color: var(--muted-2);
+  margin-top: 0.5rem;
+}
+
+.edu__note {
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--muted);
+  margin-top: 1rem;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Work
+   ═══════════════════════════════════════════════════════════ */
+.work {
+  margin-top: clamp(3rem, 8vh, 6rem);
+  border-top: 1px solid var(--line);
+}
+
+.proj {
+  position: relative;
+  display: grid;
+  grid-template-columns: 5rem minmax(0, 1fr) minmax(0, 1.15fr) 3rem;
+  gap: clamp(1rem, 3vw, 3rem);
+  align-items: start;
+  padding: clamp(2rem, 4.5vh, 3.5rem) clamp(0.75rem, 2vw, 1.5rem);
+  border-bottom: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.proj::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(255, 157, 46, 0.08), transparent 60%);
+  opacity: 0;
+  transition: opacity 0.5s var(--ease);
+  pointer-events: none;
+}
+
+.proj:hover::before {
+  opacity: 1;
+}
+
+.proj > * {
+  position: relative;
+}
+
+.proj__no {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  color: var(--muted-2);
+  padding-top: 0.5rem;
+}
+
+.proj__name {
+  font-size: clamp(1.75rem, 4.5vw, 3.6rem);
+  font-weight: 500;
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+  transition: color 0.4s var(--ease);
+}
+
+.proj:hover .proj__name {
+  color: var(--accent-soft);
+}
+
+.proj__cat {
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-top: 0.9rem;
+}
+
+.proj__blurb {
+  font-size: 0.96rem;
+  line-height: 1.75;
+  color: var(--muted);
+  max-width: 56ch;
+}
+
+.proj__tools-label {
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+  margin-top: 1.5rem;
+}
+
+.proj__tools {
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  margin-top: 0.6rem;
+}
+
+.proj__links {
+  display: flex;
+  gap: 1.25rem;
+  margin-top: 1.5rem;
+}
+
+.proj__links a {
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text);
+  border-bottom: 1px solid var(--line-strong);
+  padding-bottom: 0.25rem;
+  transition: color 0.3s var(--ease), border-color 0.3s var(--ease);
+}
+
+.proj__links a:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.proj__arrow {
+  align-self: center;
+  justify-self: end;
+  color: var(--muted-2);
+  transition: transform 0.45s var(--ease), color 0.45s var(--ease);
+}
+
+.proj:hover .proj__arrow {
+  transform: translate(6px, -6px);
+  color: var(--accent);
+}
+
+.work__more {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding-top: clamp(2.5rem, 6vh, 4rem);
+}
+
+.work__more p {
+  color: var(--muted);
+  font-size: 0.95rem;
+  max-width: 40ch;
+}
+
+.link-arrow {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--line-strong);
+  padding-bottom: 0.4rem;
+  transition: color 0.3s var(--ease), border-color 0.3s var(--ease);
+}
+
+.link-arrow:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Tech stack
+   ═══════════════════════════════════════════════════════════ */
+/* real gaps instead of 1px hairlines, so each tile can be its own pane */
+.stack {
+  margin-top: clamp(3rem, 8vh, 6rem);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
+  gap: 10px;
+}
+
+.stack__cell {
+  border-radius: 18px;
+  aspect-ratio: 1;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem;
+  transition: background 0.35s var(--ease);
+}
+
+/* lift the pane rather than replacing its fill, so the glass survives hover */
+.stack__cell:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+
+.stack__cell img {
+  width: clamp(1.6rem, 3vw, 2.1rem);
+  height: auto;
+  filter: grayscale(1) brightness(1.7);
+  opacity: 0.55;
+  transition: filter 0.35s var(--ease), opacity 0.35s var(--ease), transform 0.35s var(--ease);
+}
+
+.stack__cell:hover img {
+  filter: none;
+  opacity: 1;
+  transform: translateY(-3px) scale(1.08);
+}
+
+.stack__cell span {
+  font-family: var(--mono);
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+  text-align: center;
+  transition: color 0.35s var(--ease);
+}
+
+.stack__cell:hover span {
+  color: var(--text-dim);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Contact / footer
+   ═══════════════════════════════════════════════════════════ */
+.cta {
+  padding-block: clamp(5rem, 14vh, 11rem);
+  border-top: 1px solid var(--line);
+  text-align: center;
+}
+
+.cta__big {
+  font-size: clamp(2.5rem, 9vw, 8rem);
+  font-weight: 500;
+  line-height: 0.95;
+  letter-spacing: -0.05em;
+}
+
+.cta__big a {
+  display: inline-block;
+  transition: color 0.4s var(--ease);
+}
+
+.cta__big a:hover {
+  color: var(--accent);
+}
+
+.cta__sub {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+  margin-top: 2rem;
+}
+
+.foot {
+  border-top: 1px solid var(--line);
+  padding-block: clamp(3rem, 8vh, 5rem);
+  display: grid;
+  grid-template-columns: 1.4fr repeat(3, minmax(0, 1fr));
+  gap: 2.5rem;
+}
+
+.foot__name {
+  font-size: clamp(1.4rem, 3vw, 2.4rem);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.foot h4 {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+  margin-bottom: 1rem;
+}
+
+.foot li {
+  list-style: none;
+  font-size: 0.92rem;
+  color: var(--muted);
+  margin-bottom: 0.5rem;
+}
+
+.foot ul {
+  margin: 0;
+  padding: 0;
+}
+
+.foot a {
+  transition: color 0.3s var(--ease);
+}
+
+.foot a:hover {
+  color: var(--accent);
+}
+
+.foot__bar {
+  border-top: 1px solid var(--line);
+  padding-block: 1.5rem 2.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted-2);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Reveal primitives (GSAP animates these away)
+   ═══════════════════════════════════════════════════════════ */
+.r-up {
+  opacity: 0;
+  transform: translateY(28px);
+}
+
+.r-line b {
+  transform: translateY(105%);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Responsive
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 1080px) {
+  /* stack the copy above the character on smaller screens */
+  .hero__copy {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding-top: 7rem;
+  }
+
+  .hero__right {
+    text-align: left;
+  }
+
+  /* no room to offset him sideways on a narrow screen */
+  .stage {
+    width: 100%;
+    padding-left: 0;
+  }
+
+  /* only the driving value changes — width stays derived, so the framing
+     ratio is identical to desktop */
+  .stage__inner {
+    --stage-h: min(62svh, 30rem, 90vw);
+    margin-inline: auto;
+  }
+
+  .disc,
+  .foot {
+    grid-template-columns: 1fr;
+  }
+
+  .tl__row,
+  .proj {
+    grid-template-columns: 4.5rem minmax(0, 1fr);
+  }
+
+  .tl__body,
+  .proj__right {
+    grid-column: 2;
+  }
+
+  .proj__arrow {
+    display: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .nav__mail {
+    display: none;
+  }
+
+  .rail {
+    flex-direction: row;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: 1.25rem;
+  }
+
+  .rail::after {
+    width: 3rem;
+    height: 1px;
+    background: linear-gradient(90deg, var(--line-strong), transparent);
+  }
+
+  .resume-btn {
+    top: 4.6rem;
+    bottom: auto;
+  }
+
+  .hero__roles {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .hero__rotator {
+    min-width: 20ch;
+  }
+
+  .hero__scroll {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .r-up {
+    opacity: 1;
+    transform: none;
+  }
+
+  .r-line b {
+    transform: none;
+  }
+}
